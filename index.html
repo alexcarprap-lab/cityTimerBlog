@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="headerTitle">CityTimers Portal de Videojuegos</title>
+    
+    <!-- Fuentes Cyberpunk -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Iconos Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- ESTILOS CSS INCLUIDOS EN LÍNEA -->
+    <style>
+        /* ------------------------------------------------------------------------- */
+        /* 1. RESET Y VARIABLES */
+        /* ------------------------------------------------------------------------- */
+        :root {
+            /* Colores Neon */
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff0077;
+            --dark-bg: #0d0d1a;
+            --card-bg: rgba(20, 20, 30, 0.95);
+            --border-color: rgba(0, 243, 255, 0.3);
+            --text-color: #e0e0e0;
+            --muted-color: #888;
+            --shadow-color: rgba(0, 243, 255, 0.5);
+            --warning-color: #ffcc00; /* Neon Yellow/Orange */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-color);
+            background-color: var(--dark-bg);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ------------------------------------------------------------------------- */
+        /* 2. BACKGROUND Y EFECTOS */
+        /* ------------------------------------------------------------------------- */
+        .bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to bottom, var(--dark-bg) 0%, #1a1a33 50%, var(--dark-bg) 100%);
+            background-color: var(--dark-bg);
+            z-index: -3;
+        }
+
+        .overlay-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(13, 13, 26, 0.1) 0%, rgba(13, 13, 26, 0.95) 80%);
+            z-index: -2;
+        }
+
+        .grain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVRYbWNgYGBgYGEAAiYgIwAwYlACgGICgGICgGKCgGIChgUMLMhQAYV9cHA8zVdAAcWk8WnNBYiJ4pQY5r8gPzG0G0p4x3VjPzG0GyqXgmgAAa/gqHh4d5QAAAAASUVORK5CYII=');
+            opacity: 0.15;
+            pointer-events: none;
+            animation: grain 8s steps(10) infinite;
+            z-index: -1;
+        }
+
+        @keyframes grain {
+            0%, 100% { transform: translate(0, 0) }
+            10% { transform: translate(-5%, -10%) }
+            20% { transform: translate(-15%, 5%) }
+            30% { transform: translate(7%, -25%) }
+            40% { transform: translate(-5%, 25%) }
+            50% { transform: translate(-15%, 10%) }
+            60% { transform: translate(15%, 0%) }
+            70% { transform: translate(0%, 15%) }
+            80% { transform: translate(5%, 15%) }
+            90% { transform: translate(-5%, 10%) }
+        }
+
+        /* ------------------------------------------------------------------------- */
+        /* 3. LAYOUT PRINCIPAL Y COMPONENTES */
+        /* ------------------------------------------------------------------------- */
+
+        .wrap {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+            padding: 0 8px;
+            line-height: 1;
+            box-shadow: 0 0 15px rgba(255, 0, 119, 0.4);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--shadow-color);
+        }
+
+        .desc {
+            font-size: 0.8rem;
+            color: var(--muted-color);
+        }
+
+        .meta {
+            font-size: 0.75rem;
+            color: var(--border-color);
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr; /* Panel principal (2) y Sidebar (1) */
+            gap: 20px;
+        }
+        
+        @media (min-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 3fr 1fr; /* Más espacio para el contenido en desktop */
+            }
+        }
+
+        .left {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .right {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Tarjetas (Card) y Módulos de Datos */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.1);
+            backdrop-filter: blur(3px);
+            transition: all 0.3s;
+        }
+        
+        .card:hover {
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.3);
+            border-color: var(--neon-blue);
+        }
+        
+        .card-title {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            border-left: 3px solid var(--neon-pink);
+            padding-left: 10px;
+        }
+
+        /* ------------------------------------------------------------------------- */
+        /* 4. SECCIÓN CONTADORES (TIMERS) */
+        /* ------------------------------------------------------------------------- */
+
+        .timer-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .timer-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .timer-item:last-child {
+            border-bottom: none;
+        }
+
+        .timer-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .timer-info .ph {
+            font-size: 1.5rem;
+            color: var(--neon-pink);
+        }
+
+        .timer-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-color);
+        }
+
+        .timer-countdown {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--neon-pink);
+            text-shadow: 0 0 5px rgba(255, 0, 119, 0.4);
+            white-space: nowrap;
+        }
+        
+        /* Contador grande para GTA (destacado) */
+        .featured-timer .timer-countdown {
+            font-size: 2.2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px var(--shadow-color);
+        }
+        
+        .featured-timer {
+            border-bottom: 2px solid var(--neon-blue) !important;
+            padding-bottom: 20px !important;
+        }
+
+
+        /* ------------------------------------------------------------------------- */
+        /* 5. SECCIÓN NOTICIAS Y CITAS */
+        /* ------------------------------------------------------------------------- */
+        
+        .news-module {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .news-item-content {
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 6px;
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .news-item-content h3 {
+            font-size: 1rem;
+            color: var(--neon-blue);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .news-item-content p {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            margin-bottom: 10px;
+        }
+
+        .citations {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            font-size: 0.75rem;
+        }
+        
+        .citations strong {
+            color: var(--neon-pink);
+        }
+
+        .citation-link {
+            color: var(--warning-color);
+            text-decoration: underline;
+            transition: color 0.2s;
+            margin-left: 5px;
+            display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .citation-link:hover {
+            color: var(--neon-blue);
+        }
+
+        /* ------------------------------------------------------------------------- */
+        /* 6. INDICADOR DE CARGA Y ERRORES */
+        /* ------------------------------------------------------------------------- */
+        
+        .loading-animation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100px;
+            color: var(--neon-blue);
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 243, 255, 0.1);
+            border-left-color: var(--neon-blue);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            padding: 15px;
+            border: 1px solid var(--neon-pink);
+            border-radius: 6px;
+            background-color: rgba(255, 0, 119, 0.1);
+            color: var(--neon-pink);
+            font-size: 0.9rem;
+        }
+        
+        /* ------------------------------------------------------------------------- */
+        /* 7. OTROS COMPONENTES (Reloj, Switches, Adbox, etc.) */
+        /* ------------------------------------------------------------------------- */
+
+        .top-right-bar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .clock-mini {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--shadow-color);
+            background: var(--card-bg);
+            padding: 5px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .switch-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .switch {
+            width: 28px;
+            height: 28px;
+            border: 2px solid var(--neon-pink);
+            background-color: rgba(255, 0, 119, 0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 0 5px rgba(255, 0, 119, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .switch:hover {
+            background-color: rgba(255, 0, 119, 0.3);
+            border-color: var(--neon-blue);
+        }
+
+        .switch.active {
+            background-color: var(--neon-pink);
+            box-shadow: 0 0 10px var(--neon-pink);
+        }
+
+        .switch .ph {
+            font-size: 1.2rem;
+            color: var(--text-color);
+        }
+
+        .switch.active .ph {
+            color: var(--dark-bg);
+        }
+        
+        #langSwitch.active .ph-translate {
+            color: var(--dark-bg);
+        }
+
+        .cta-button {
+            background: linear-gradient(90deg, var(--neon-blue) 0%, var(--neon-pink) 100%);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-weight: 700;
+            color: var(--dark-bg);
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(255, 0, 119, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .cta-button:hover {
+            opacity: 0.85;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 0, 119, 0.5);
+        }
+        
+        .adbox {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px dashed var(--neon-blue);
+            color: var(--border-color);
+            text-align: center;
+            font-size: 0.75rem;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            min-height: 50px;
+        }
+        
+        #topLeaderboardAd {
+            min-height: 90px;
+            margin-bottom: 20px;
+        }
+        
+        #sidebarSkyscraperAd {
+            min-height: 300px;
+            padding: 20px;
+        }
+        
+        footer {
+            border-top: 1px solid var(--border-color);
+            padding: 15px 0;
+            margin-top: 20px;
+            font-size: 0.75rem;
+            text-align: center;
+            color: var(--muted-color);
+        }
+
+        /* ------------------------------------------------------------------------- */
+        /* 8. FULLSCREEN */
+        /* ------------------------------------------------------------------------- */
+        
+        .fs-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.98);
+            z-index: 1000;
+            display: none; 
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .fs-overlay.visible {
+            opacity: 1;
+        }
+
+        .fs-card {
+            width: 90%;
+            max-width: 1400px;
+            height: 90%;
+            background-color: var(--card-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0, 243, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .fs-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .fs-control-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .fs-clock {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--neon-blue);
+            text-shadow: 0 0 7px var(--shadow-color);
+        }
+
+        .fs-switch {
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--neon-pink);
+            background-color: rgba(255, 0, 119, 0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 0 8px rgba(255, 0, 119, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .fs-switch.active {
+            background-color: var(--neon-pink);
+            box-shadow: 0 0 15px var(--neon-pink);
+        }
+
+        .fs-switch .ph {
+            font-size: 1.3rem;
+            color: var(--text-color);
+        }
+
+        .fs-switch.active .ph {
+            color: var(--dark-bg);
+        }
+
+
+        .fs-content-centered {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1; 
+            text-align: center;
+        }
+
+        .fs-count {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(3rem, 6vw, 8rem);
+            font-weight: 700;
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px rgba(255, 0, 119, 0.7);
+            margin: 20px 0;
+            line-height: 1.2;
+        }
+
+        .f11-tip {
+            font-size: 1rem;
+            color: var(--border-color);
+            opacity: 0.7;
+            transition: opacity 0.5s;
+            margin-top: 10px;
+        }
+
+        #fsAd {
+            min-height: 100px;
+            margin-top: 20px;
+        }
+        
+        /* ------------------------------------------------------------------------- */
+        /* 9. RESPONSIVE (MÓVIL) */
+        /* ------------------------------------------------------------------------- */
+
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .right {
+                order: -1; 
+                flex-direction: column; 
+            }
+            
+            #sidebarSkyscraperAd {
+                min-height: 100px; 
+            }
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .meta {
+                margin-top: 10px;
+            }
+            
+            .top-right-bar {
+                position: relative;
+                top: auto;
+                right: auto;
+                justify-content: flex-end;
+                padding-bottom: 10px;
+            }
+            
+            .timer-countdown {
+                font-size: 1rem;
+            }
+
+            .featured-timer .timer-countdown {
+                font-size: 1.8rem;
+            }
+            
+            .fs-count {
+                font-size: 12vw;
+            }
+            
+            .f11-tip {
+                font-size: 0.8rem;
+            }
+            
+            .fs-top {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .fs-control-group {
+                justify-content: space-between;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Capas de fondo con efectos Cyberpunk -->
+    <div class="bg"></div>
+    <div class="overlay-bg"></div>
+    <div class="grain"></div>
+
+    <!-- Barra Superior Derecha (Reloj Mini y Switches) -->
+    <div class="top-right-bar">
+        <div id="miniClock" class="clock-mini">00:00</div>
+        
+        <div class="switch-container">
+            <!-- Switch de Segundos -->
+            <button id="secSwitch" class="switch" role="switch" aria-checked="false" title="Mostrar segundos">
+                <i class="ph ph-hourglass"></i>
+            </button>
+            <!-- Switch de Idioma -->
+            <button id="langSwitch" class="switch" role="switch" aria-checked="false" title="Cambiar idioma">
+                <i class="ph ph-translate"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <header>
+            <div class="branding">
+                <div class="brand">
+                    <span class="logo">CT</span>
+                    <h1 id="headerTitle">CityTimers</h1>
+                </div>
+                <p id="headerDesc" class="desc">Contadores cyberpunk • El portal de lanzamientos</p>
+            </div>
+            <div class="meta" id="headerMeta">Diseño: Modular Grid • Datos 24/7</div>
+        </header>
+        
+        <!-- Espacio de Monetización: Leaderboard Ad -->
+        <div id="topLeaderboardAd" class="adbox">
+            [ADVERTISEMENT] LEADERBOARD 728x90: Espacio de Monetización Premium
+        </div>
+
+        <div class="main-grid">
+            <div class="left">
+                <!-- Módulo 1: Contadores Destacados -->
+                <section id="gameTimers" class="card">
+                    <h2 class="card-title" id="timersTitle">Lanzamientos Destacados</h2>
+                    <div class="timer-list" id="timerList">
+                        
+                        <!-- Contador de GTA (Featured) -->
+                        <div id="timer-gta" class="timer-item featured-timer">
+                            <div class="timer-info">
+                                <i class="ph ph-steering-wheel"></i>
+                                <div>
+                                    <span id="gtaTitle" class="timer-name">Grand Theft Auto VI</span>
+                                </div>
+                            </div>
+                            <span id="time-gta" class="timer-countdown">Cargando…</span>
+                        </div>
+                        
+                        <!-- Contador de Elden Ring DLC -->
+                         <div id="timer-elden" class="timer-item">
+                            <div class="timer-info">
+                                <i class="ph ph-sword"></i>
+                                <div>
+                                    <span id="eldenTitle" class="timer-name">Elden Ring DLC: Shadow of the Erdtree</span>
+                                </div>
+                            </div>
+                            <span id="time-elden" class="timer-countdown">Cargando…</span>
+                        </div>
+                        
+                        <!-- Contador de Monster Hunter Wilds -->
+                         <div id="timer-mh" class="timer-item">
+                            <div class="timer-info">
+                                <i class="ph ph-dragon"></i>
+                                <div>
+                                    <span id="mhTitle" class="timer-name">Monster Hunter Wilds</span>
+                                </div>
+                            </div>
+                            <span id="time-mh" class="timer-countdown">Cargando…</span>
+                        </div>
+                        
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                         <button id="openFs" class="cta-button">
+                             <i class="ph ph-monitor"></i> Ver En Foco
+                         </button>
+                    </div>
+                </section>
+
+                <!-- Módulo 2: Noticias Destacadas de Videojuegos (CITADAS Y AUTOMÁTICAS) -->
+                <section id="gamingNews" class="card news-section">
+                    <h2 class="card-title" id="gamingNewsTitle"><i class="ph ph-game-controller-fill" style="color: var(--neon-pink);"></i> Noticias Destacadas de Gaming</h2>
+                    <div class="news-module" id="gamingNewsContent">
+                        <!-- El contenido generado por JS se insertará aquí -->
+                        <div class="loading-animation"><div class="spinner"></div><p style="color: var(--neon-blue);">Cargando noticias...</p></div>
+                    </div>
+                </section>
+                
+                <!-- Módulo 3: Noticias de Hardware -->
+                <section id="hardwareNews" class="card news-section">
+                    <h2 class="card-title" id="hardwareNewsTitle"><i class="ph ph-cpu-fill" style="color: var(--neon-pink);"></i> Últimas Tendencias de Hardware</h2>
+                    <div class="news-module" id="hardwareNewsContent">
+                        <!-- El contenido generado por JS se insertará aquí -->
+                        <div class="loading-animation"><div class="spinner"></div><p style="color: var(--neon-blue);">Cargando noticias...</p></div>
+                    </div>
+                </section>
+
+                <!-- Módulo 4: Cronología de la Saga GTA (NUEVA SECCIÓN) -->
+                <section id="gtaChronology" class="card">
+                    <h2 class="card-title" id="gtaChronologyTitle"><i class="ph ph-calendar-check-fill" style="color: var(--neon-pink);"></i> Archivos: Cronología de la Saga Grand Theft Auto</h2>
+                    <div class="news-module">
+                        <ul style="list-style: none; padding-left: 0; font-size: 0.95rem; margin-top: 5px;">
+                            
+                            <li class="timer-item" style="border-bottom: 1px dotted rgba(255, 255, 255, 0.1); padding: 10px 0;">
+                                <div class="timer-info" style="align-items: flex-start;">
+                                    <i class="ph ph-number-circle-three" style="color: var(--neon-blue); margin-top: 3px;"></i>
+                                    <div>
+                                        <span class="timer-name" style="color: var(--neon-blue);">GTA III (2001)</span>
+                                        <p style="font-size: 0.85rem; color: var(--muted-color);">
+                                            Pionero del mundo 3D abierto. Lanzó la fórmula moderna de la franquicia y la llevó a la fama global.
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li class="timer-item" style="border-bottom: 1px dotted rgba(255, 255, 255, 0.1); padding: 10px 0;">
+                                <div class="timer-info" style="align-items: flex-start;">
+                                    <i class="ph ph-sun" style="color: var(--neon-pink); margin-top: 3px;"></i>
+                                    <div>
+                                        <span class="timer-name" style="color: var(--neon-pink);">Vice City (2002)</span>
+                                        <p style="font-size: 0.85rem; color: var(--muted-color);">
+                                            Ambiente de los 80's. Inspirado en 'Miami Vice' y 'Scarface', fue aclamado por su banda sonora icónica.
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="timer-item" style="border-bottom: 1px dotted rgba(255, 255, 255, 0.1); padding: 10px 0;">
+                                <div class="timer-info" style="align-items: flex-start;">
+                                    <i class="ph ph-buildings" style="color: var(--neon-blue); margin-top: 3px;"></i>
+                                    <div>
+                                        <span class="timer-name" style="color: var(--neon-blue);">San Andreas (2004)</span>
+                                        <p style="font-size: 0.85rem; color: var(--muted-color);">
+                                            Introdujo elementos RPG, personalización de personajes y un mapa masivo que abarca tres ciudades.
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li class="timer-item" style="border-bottom: 1px dotted rgba(255, 255, 255, 0.1); padding: 10px 0;">
+                                <div class="timer-info" style="align-items: flex-start;">
+                                    <i class="ph ph-taxi" style="color: var(--neon-pink); margin-top: 3px;"></i>
+                                    <div>
+                                        <span class="timer-name" style="color: var(--neon-pink);">GTA IV (2008)</span>
+                                        <p style="font-size: 0.85rem; color: var(--muted-color);">
+                                            Regreso a Liberty City. Un tono más serio, oscuro y realista con una física de conducción revolucionaria.
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                            <li class="timer-item" style="padding: 10px 0;">
+                                <div class="timer-info" style="align-items: flex-start;">
+                                    <i class="ph ph-money-fill" style="color: var(--neon-blue); margin-top: 3px;"></i>
+                                    <div>
+                                        <span class="timer-name" style="color: var(--neon-blue);">GTA V (2013)</span>
+                                        <p style="font-size: 0.85rem; color: var(--muted-color);">
+                                            Tres protagonistas jugables. Un éxito comercial masivo que lanzó el fenómeno GTA Online.
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            
+                        </ul>
+                    </div>
+                </section>
+
+                
+            </div>
+
+            <aside class="right">
+                <!-- Espacio de Monetización: Skyscraper Ad -->
+                <div id="sidebarSkyscraperAd" class="adbox">
+                    [ADVERTISEMENT] SKYSCRAPER 160x600: Alto Impacto
+                </div>
+                
+                <!-- Módulo 5: Enlaces y Más Info -->
+                <div class="card">
+                    <h3 class="card-title" style="font-size: 1.1rem; color: var(--neon-pink);">Otros Contadores</h3>
+                    <ul style="list-style: none; padding-left: 0; font-size: 0.9rem;">
+                        <li style="margin-bottom: 8px; border-bottom: 1px dotted var(--muted-color); padding-bottom: 5px;">
+                            <i class="ph ph-rocket" style="color: var(--neon-blue);"></i> Próximos Eventos E3/Gamescom
+                        </li>
+                         <li style="margin-bottom: 8px; border-bottom: 1px dotted var(--muted-color); padding-bottom: 5px;">
+                            <i class="ph ph-television-simple" style="color: var(--neon-blue);"></i> Series Basadas en Juegos
+                        </li>
+                        <li style="margin-bottom: 8px; border-bottom: 1px dotted var(--muted-color); padding-bottom: 5px;">
+                            <i class="ph ph-bank" style="color: var(--neon-blue);"></i> Inversiones en eSports
+                        </li>
+                    </ul>
+                </div>
+            </aside>
+        </div>
+        
+        <footer>
+            &copy; 2026 CityTimers • Diseñado para la comunidad gamer. <span id="last-upd" style="color: var(--neon-blue);"></span>
+        </footer>
+    </div>
+    
+    <!-- FULLSCREEN OVERLAY (Pantalla Completa - En Foco) -->
+    <div id="fsOverlay" class="fs-overlay" aria-hidden="true">
+        <div class="fs-card">
+            <div class="fs-top">
+                <div id="fsClock" class="fs-clock">00:00:00</div>
+                <div class="fs-control-group">
+                    <button id="fsSecSwitch" class="fs-switch" role="switch" aria-checked="false" title="Mostrar segundos">
+                        <i class="ph ph-hourglass"></i>
+                    </button>
+                    <button id="closeFs" class="cta-button">
+                        <i class="ph ph-x-circle"></i> SALIR
+                    </button>
+                </div>
+            </div>
+            
+            <div class="fs-content-centered">
+                <h2 id="gtaTitleFs" style="font-family: 'Orbitron', sans-serif; color: var(--neon-blue); font-size: clamp(1.5rem, 2vw, 3rem);">Grand Theft Auto VI</h2>
+                <div id="fsCount" class="fs-count">000d 00h 00m</div>
+                <p id="f11Tip" class="f11-tip" style="display: block;">¡Presiona **F11** para la experiencia inmersiva!</p>
+            </div>
+            
+            <div id="fsAd" class="adbox">
+                [ADVERTISEMENT] BANNER INMERSIVO: La publicidad más impactante en pantalla completa.
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SCRIPT JAVASCRIPT INCLUIDO EN LÍNEA -->
+    <script>
+        /**
+         * Script principal para CityTimers - Portal de Videojuegos.
+         * Combina contadores, I18N, Fullscreen y la Lógica de API de Noticias Citada.
+         */
+        (function() {
+            'use strict'; 
+            
+            // CONFIGURACIÓN DE LA API (Dejar apiKey en blanco, el entorno la proporciona)
+            const API_KEY = ""; 
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
+            
+            // Configuración de reintentos para el fetch
+            const MAX_RETRIES = 5;
+            const INITIAL_DELAY_MS = 1000;
+            const NEWS_UPDATE_INTERVAL = 1800000; // 30 minutos
+
+            /* ========= CONFIG & CONSTANTES ========= */
+
+            // Configuración de múltiples contadores
+            const COUNTER_CONFIG = [
+                { id: 'gta', labelKey: 'gtaTitle', date: "2026-11-19T00:00:00" },
+                { id: 'elden', labelKey: 'eldenTitle', date: "2024-06-21T00:00:00" },
+                { id: 'mh', labelKey: 'mhTitle', date: "2025-09-01T00:00:00" },
+            ];
+            
+            // Definición de las secciones de noticias a cargar
+            const NEWS_SECTIONS = [
+                { id: 'gamingNewsContent', topic: 'Noticias recientes de juegos de alto perfil y lanzamientos de consolas', titleKey: 'gamingNewsTitle' },
+                { id: 'hardwareNewsContent', topic: 'Noticias recientes sobre tarjetas gráficas, CPU y hardware gaming', titleKey: 'hardwareNewsTitle' }
+            ];
+
+            // Claves de localStorage
+            const STORAGE_KEYS = {
+                SECONDS: 'ct-show-seconds-v2',
+                LANGUAGE: 'ct-lang-v2',
+                F11_TIP: 'ct-f11-tip-v2'
+            };
+            
+            // Traducciones de la INTERFAZ
+            const translations = {
+                es: {
+                    headerTitle: 'CityTimers | Gaming Hub',
+                    headerDesc: 'Contadores cyberpunk • El portal de lanzamientos',
+                    timersTitle: 'Lanzamientos Destacados',
+                    gamingNewsTitle: 'Noticias Destacadas de Gaming',
+                    hardwareNewsTitle: 'Últimas Tendencias de Hardware',
+                    gtaChronologyTitle: 'Archivos: Cronología de la Saga Grand Theft Auto',
+                    loadingNews: 'Buscando las últimas noticias...',
+                    gtaTitle: 'Grand Theft Auto VI',
+                    eldenTitle: 'Elden Ring DLC: Shadow of the Erdtree',
+                    mhTitle: 'Monster Hunter Wilds',
+                    fullScreenBtn: 'Ver En Foco',
+                    exitFsBtn: 'Salir',
+                    available: '¡YA DISPONIBLE!',
+                    secOn: 'Mostrar segundos',
+                    langSwitch: 'Cambiar idioma',
+                    citationsTitle: 'Fuentes Citadas (Atribución de Copyright):',
+                    dateFormat: (d, h, m, s, withS) => withS ? `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s` : `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`
+                },
+                en: {
+                    headerTitle: 'CityTimers | Gaming Hub',
+                    headerDesc: 'Cyberpunk Timers • The Release Portal',
+                    timersTitle: 'Featured Releases',
+                    gamingNewsTitle: 'Featured Gaming News',
+                    hardwareNewsTitle: 'Latest Hardware Trends',
+                    gtaChronologyTitle: 'Archives: Grand Theft Auto Saga Chronology',
+                    loadingNews: 'Fetching the latest news...',
+                    gtaTitle: 'Grand Theft Auto VI',
+                    eldenTitle: 'Elden Ring DLC: Shadow of the Erdtree',
+                    mhTitle: 'Monster Hunter Wilds',
+                    fullScreenBtn: 'View In Focus',
+                    exitFsBtn: 'Exit',
+                    available: 'AVAILABLE NOW!',
+                    secOn: 'Show seconds',
+                    langSwitch: 'Change language',
+                    citationsTitle: 'Cited Sources (Copyright Attribution):',
+                    dateFormat: (d, h, m, s, withS) => withS ? `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m ${String(s).padStart(2,'0')}s` : `${d}d ${String(h).padStart(2,'0')}h ${String(m).padStart(2,'0')}m`
+                }
+            };
+
+            /* ========= DOM ELEMENTS & STATE ========= */
+
+            const $ = id => document.getElementById(id); 
+
+            const ELEMENTS = {
+                miniClock: $('miniClock'),
+                fsClock: $('fsClock'),
+                fsCount: $('fsCount'),
+                secSwitch: $('secSwitch'),
+                fsSecSwitch: $('fsSecSwitch'),
+                langSwitch: $('langSwitch'),
+                openFs: $('openFs'),
+                closeFs: $('closeFs'),
+                fsOverlay: $('fsOverlay'),
+                timeCounters: {}, 
+                headerTitle: $('headerTitle'),
+                headerDesc: $('headerDesc'),
+                timersTitle: $('timersTitle'),
+                gamingNewsTitle: $('gamingNewsTitle'),
+                hardwareNewsTitle: $('hardwareNewsTitle'),
+                gtaChronologyTitle: $('gtaChronologyTitle'), // Nuevo elemento
+                newsContainers: {
+                    gamingNewsContent: $('gamingNewsContent'),
+                    hardwareNewsContent: $('hardwareNewsContent')
+                },
+                f11Tip: $('f11Tip'),
+                lastUpd: $('last-upd'),
+                gtaTitleFs: $('gtaTitleFs')
+            };
+            
+            COUNTER_CONFIG.forEach(c => ELEMENTS.timeCounters[`time-${c.id}`] = $(`time-${c.id}`));
+
+            let showSeconds = localStorage.getItem(STORAGE_KEYS.SECONDS) === '1';
+            let lang = localStorage.getItem(STORAGE_KEYS.LANGUAGE) || 'es';
+            let currentTrans = translations[lang] || translations.es;
+            let hasSeenF11Tip = localStorage.getItem(STORAGE_KEYS.F11_TIP) === '1';
+
+
+            /* ========= LÓGICA DE API DE NOTICIAS CON CITAS ========= */
+
+            // Función de fetch con retroceso exponencial
+            async function exponentialBackoffFetch(url, options, retries = 0) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        if ((response.status === 429 || response.status >= 500) && retries < MAX_RETRIES) {
+                            const delay = INITIAL_DELAY_MS * Math.pow(2, retries) + Math.random() * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return exponentialBackoffFetch(url, options, retries + 1);
+                        }
+                        throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
+                    }
+                    return response;
+                } catch (error) {
+                    if (retries < MAX_RETRIES) {
+                        const delay = INITIAL_DELAY_MS * Math.pow(2, retries) + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        return exponentialBackoffFetch(url, options, retries + 1);
+                    }
+                    throw new Error(`Fallo total de la solicitud a la API: ${error.message}`);
+                }
+            }
+
+            /**
+             * Llama a la API de Gemini con Google Search Grounding para obtener un resumen y citas.
+             */
+            async function fetchAndRenderNews(topic, containerId) {
+                const container = ELEMENTS.newsContainers[containerId];
+                if (!container) return;
+                
+                // Mostrar estado de carga
+                container.innerHTML = `
+                    <div class="loading-animation">
+                        <div class="spinner"></div>
+                        <p style="color: var(--neon-blue);">${currentTrans.loadingNews}</p>
+                    </div>
+                `;
+
+                const languageCode = lang === 'es' ? 'español' : 'english';
+                
+                const systemPrompt = `Eres un periodista experto en el tema de ${topic}. Genera un resumen atractivo y bien escrito sobre el tema solicitado, utilizando solo información de fuentes confiables de Google Search. Escribe la respuesta completamente en ${languageCode}. El resumen debe ser de aproximadamente 100-120 palabras.`;
+                const userQuery = `Dame un resumen de las últimas noticias sobre: ${topic}`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    tools: [{ "google_search": {} }],
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const options = {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                };
+
+                try {
+                    const response = await exponentialBackoffFetch(API_URL, options);
+                    const result = await response.json();
+                    
+                    const candidate = result.candidates?.[0];
+                    const text = candidate?.content?.parts?.[0]?.text;
+
+                    if (!text) {
+                        throw new Error("Contenido no generado o respuesta inválida.");
+                    }
+
+                    // Extraer fuentes de grounding (citas)
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title); 
+                    }
+                    
+                    renderNews(topic, text, sources, container);
+
+                } catch (error) {
+                    console.error(`Error al obtener noticias para ${topic}:`, error);
+                    container.innerHTML = `
+                        <div class="error-message">
+                            <i class="ph ph-warning-circle-fill"></i> Fallo al cargar noticias. Usando datos de respaldo.
+                        </div>
+                    `;
+                }
+            }
+
+            function renderNews(topic, summaryText, sources, container) {
+                let citationsHtml = '';
+                if (sources.length > 0) {
+                    // Citar las fuentes.
+                    const sourceList = sources.map((s, index) => `
+                        <a href="${s.uri}" target="_blank" rel="noopener noreferrer" class="citation-link" title="${s.title}">${s.title}</a>
+                    `).join('<span style="color: var(--muted-color);"> | </span>');
+
+                    citationsHtml = `
+                        <div class="citations">
+                            <strong>${currentTrans.citationsTitle}</strong>
+                            ${sourceList}
+                        </div>
+                    `;
+                } else {
+                    citationsHtml = `
+                        <div class="citations" style="color: var(--warning-color);">
+                            Advertencia: No se encontraron fuentes directas de atribución.
+                        </div>
+                    `;
+                }
+                
+                // Usamos el texto del tema como "título" de la noticia.
+                const newsTitle = topic.length > 50 ? topic.substring(0, 50) + '...' : topic;
+
+
+                container.innerHTML = `
+                    <div class="news-item-content">
+                        <h3 style="text-transform: capitalize;">${newsTitle}</h3>
+                        <p>${summaryText.replace(/\n/g, '<br>')}</p>
+                        ${citationsHtml}
+                    </div>
+                `;
+            }
+
+
+            /* ========= LÓGICA DE TRADUCCIÓN (I18N) ========= */
+
+            function updateTextContent() {
+                currentTrans = translations[lang];
+
+                // Actualizar textos estáticos
+                ELEMENTS.headerTitle.textContent = currentTrans.headerTitle;
+                ELEMENTS.headerDesc.textContent = currentTrans.headerDesc;
+                ELEMENTS.timersTitle.textContent = currentTrans.timersTitle;
+                ELEMENTS.gamingNewsTitle.innerHTML = `<i class="ph ph-game-controller-fill" style="color: var(--neon-pink);"></i> ${currentTrans.gamingNewsTitle}`;
+                ELEMENTS.hardwareNewsTitle.innerHTML = `<i class="ph ph-cpu-fill" style="color: var(--neon-pink);"></i> ${currentTrans.hardwareNewsTitle}`;
+                ELEMENTS.gtaChronologyTitle.innerHTML = `<i class="ph ph-calendar-check-fill" style="color: var(--neon-pink);"></i> ${currentTrans.gtaChronologyTitle}`; // Actualizar título de cronología
+                ELEMENTS.openFs.textContent = currentTrans.fullScreenBtn;
+                ELEMENTS.closeFs.textContent = currentTrans.exitFsBtn;
+                
+                // Actualizar títulos de contadores
+                COUNTER_CONFIG.forEach(c => {
+                    const el = $(c.id + 'Title');
+                    if(el) el.textContent = currentTrans[c.labelKey];
+                });
+                if (ELEMENTS.gtaTitleFs) ELEMENTS.gtaTitleFs.textContent = currentTrans.gtaTitle;
+
+                // Actualizar switches y ARIA
+                ELEMENTS.secSwitch.title = currentTrans.secOn;
+                ELEMENTS.fsSecSwitch.title = currentTrans.secOn;
+                ELEMENTS.langSwitch.title = currentTrans.langSwitch;
+                ELEMENTS.langSwitch.classList.toggle('active', lang === 'en');
+                ELEMENTS.langSwitch.setAttribute('aria-checked', lang === 'en' ? 'true' : 'false');
+                
+                // Forzar re-renderizado de contadores y noticias (clave para la auto-actualización y cambio de idioma)
+                updateCountdown();
+                NEWS_SECTIONS.forEach(section => {
+                    fetchAndRenderNews(section.topic, section.id);
+                });
+            }
+            
+            function toggleLanguage() {
+                lang = (lang === 'es' ? 'en' : 'es');
+                localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
+                updateTextContent();
+            }
+
+
+            /* ========= LÓGICA DE SWITCHES Y CONTADORES ========= */
+
+            function applySwitchUI() {
+                ELEMENTS.secSwitch.classList.toggle('active', showSeconds);
+                ELEMENTS.fsSecSwitch.classList.toggle('active', showSeconds);
+                ELEMENTS.secSwitch.setAttribute('aria-checked', showSeconds ? 'true' : 'false');
+                ELEMENTS.fsSecSwitch.setAttribute('aria-checked', showSeconds ? 'true' : 'false');
+            }
+
+            function toggleSeconds() {
+                showSeconds = !showSeconds;
+                localStorage.setItem(STORAGE_KEYS.SECONDS, showSeconds ? '1' : '0');
+                applySwitchUI();
+            }
+
+            function formatTime(d, withSeconds) {
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mm = String(d.getMinutes()).padStart(2, '0');
+                const ss = String(d.getSeconds()).padStart(2, '0');
+                return withSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+            }
+
+            function updateClocks() {
+                const now = new Date();
+                const timeStr = formatTime(now, showSeconds);
+                ELEMENTS.miniClock.textContent = timeStr;
+                ELEMENTS.fsClock.textContent = timeStr;
+            }
+
+            function formatCountdown(ms, withSeconds) {
+                if (ms <= 0) return currentTrans.available;
+
+                const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((ms % (1000 * 60)) / 1000);
+                
+                return currentTrans.dateFormat(days, hours, minutes, seconds, withSeconds);
+            }
+
+            function updateCountdown() {
+                const now = Date.now();
+                
+                COUNTER_CONFIG.forEach(c => {
+                    const diff = new Date(c.date).getTime() - now;
+                    const txt = formatCountdown(diff, showSeconds);
+                    const targetEl = ELEMENTS.timeCounters[`time-${c.id}`];
+                    
+                    if (targetEl) {
+                        targetEl.textContent = txt;
+                        if (c.id === 'gta' && ELEMENTS.fsCount) {
+                            ELEMENTS.fsCount.textContent = txt;
+                        }
+                    }
+                });
+            }
+
+            /* ========= FULLSCREEN LÓGICA ========= */
+
+            function hideF11Tip() {
+                if (ELEMENTS.f11Tip && !hasSeenF11Tip) {
+                    ELEMENTS.f11Tip.style.opacity = '0'; 
+                    ELEMENTS.f11Tip.style.pointerEvents = 'none'; 
+                    hasSeenF11Tip = true;
+                    localStorage.setItem(STORAGE_KEYS.F11_TIP, '1');
+                    document.removeEventListener('keydown', hideF11TipOnKey);
+                }
+            }
+            
+            function hideF11TipOnKey(e) {
+                if (e.key !== 'Escape') {
+                    hideF11Tip();
+                }
+            }
+
+            function setupF11Tip() {
+                if (ELEMENTS.f11Tip) {
+                    if (hasSeenF11Tip) {
+                        ELEMENTS.f11Tip.style.display = 'none';
+                    } else {
+                        ELEMENTS.f11Tip.style.display = 'block'; 
+                        document.addEventListener('keydown', hideF11TipOnKey, { once: true });
+                    }
+                }
+            }
+            
+            function openFullScreen() {
+                ELEMENTS.fsOverlay.style.display = 'flex';
+                setTimeout(() => ELEMENTS.fsOverlay.classList.add('visible'), 10); 
+                ELEMENTS.fsOverlay.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden'; 
+                updateCountdown();
+                hideF11Tip(); 
+            }
+
+            function closeFullScreen() {
+                ELEMENTS.fsOverlay.classList.remove('visible');
+                setTimeout(() => {
+                    ELEMENTS.fsOverlay.style.display = 'none';
+                    ELEMENTS.fsOverlay.setAttribute('aria-hidden', 'true');
+                    document.body.style.overflow = '';
+                }, 500); 
+            }
+
+            /* ========= INICIALIZACIÓN Y LISTENERS ========= */
+
+            function init() {
+                // 1. Inicializar UI y textos (llama a updateCountdown y fetchAndRenderNews)
+                applySwitchUI();
+                updateTextContent(); 
+                setupF11Tip(); 
+                
+                // 2. Tarea de auto-actualización
+                const updateAllNews = () => {
+                    NEWS_SECTIONS.forEach(section => {
+                        fetchAndRenderNews(section.topic, section.id);
+                    });
+                };
+                
+                // Actualización principal (cada 30 minutos)
+                setInterval(updateAllNews, NEWS_UPDATE_INTERVAL);
+
+                // 3. Intervalo principal (1 segundo) para relojes/contadores
+                setInterval(() => {
+                    updateClocks();
+                    updateCountdown();
+                    ELEMENTS.lastUpd.textContent = new Date().toLocaleTimeString();
+                }, 1000);
+
+                // 4. Listeners
+                ELEMENTS.secSwitch.addEventListener('click', toggleSeconds);
+                ELEMENTS.fsSecSwitch.addEventListener('click', toggleSeconds);
+                ELEMENTS.langSwitch.addEventListener('click', toggleLanguage);
+                ELEMENTS.openFs.addEventListener('click', openFullScreen);
+                ELEMENTS.closeFs.addEventListener('click', closeFullScreen);
+                
+                // Listener de Escape para cerrar Fullscreen
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && ELEMENTS.fsOverlay.style.display === 'flex') {
+                        closeFullScreen();
+                    }
+                });
+                
+                // Cierre del overlay al hacer click fuera
+                ELEMENTS.fsOverlay.addEventListener('click', (e) => {
+                    if (e.target === ELEMENTS.fsOverlay) {
+                        closeFullScreen();
+                    }
+                });
+
+                console.log(`CityTimers iniciado. Auto-actualización de noticias establecida cada ${NEWS_UPDATE_INTERVAL / 60000} minutos.`);
+            }
+
+            // Iniciar la aplicación
+            window.onload = init;
+        })();
+    </script>
+</body>
+</html>
